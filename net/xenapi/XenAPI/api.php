@@ -17,20 +17,21 @@
  */
 
 // To change the API key, replace the REPLACE_THIS_WITH_AN_API_KEY with your desired API key.
-$restAPI = new RestAPI('REPLACE_THIS_WITH_AN_API_KEY');
+const APIKEY = '12345';
+$restAPI = new RestAPI(APIKEY);
 
 # DO NOT CHANGE ANYTHING BELOW THIS LINE UNLESS
 # YOU REALLY KNOW WHAT ARE YOU DOING
 
 // Process the request
-if ($restAPI->getAPIKey() !== NULL && $restAPI->isDefaultAPIKey()) { 
+if ($restAPI->getAPIKey() !== NULL && $restAPI->isDefaultAPIKey()) {
     // API is set but not changed from the default API key.
     $restAPI->throwError(17);
 } else if ($restAPI->getAPIKey() !== NULL && !$restAPI->hasRequest('hash') && !$restAPI->isPublicAction()) {
     // Hash argument is required and was not found, throw error.
     $restAPI->throwError(3, 'hash');
 } else if (!$restAPI->getHash() && !$restAPI->isPublicAction()) {
-    // Hash argument is empty or not set, throw error. 
+    // Hash argument is empty or not set, throw error.
     $restAPI->throwError(1, 'hash');
 } else if (!$restAPI->isAuthenticated() && !$restAPI->isPublicAction()) {
     // Hash is not valid and action is not public, throw error.
@@ -39,7 +40,7 @@ if ($restAPI->getAPIKey() !== NULL && $restAPI->isDefaultAPIKey()) {
     // Action argument was not found, throw error.
     $restAPI->throwError(3, 'action');
 } else if (!$restAPI->getAction()) {
-    // Action argument is empty or not set, throw error. 
+    // Action argument is empty or not set, throw error.
     $restAPI->throwError(1, 'action');
 } else if (!$restAPI->isSupportedAction()) {
     // Action is not supported, throw error.
@@ -72,12 +73,12 @@ class RestAPI {
     *                    without being 'authenticated'.
     *   - authenticated: The action requires the user to be authenticated to use the action
     *                    with a 'value' argument.
-    *   - moderator:     The action requires the user to be a moderator to use the action 
+    *   - moderator:     The action requires the user to be a moderator to use the action
     *                    with a 'value' argument.
     *   - administrator: The action requires the user to be an administrator to use the action
     *                    with a 'value' argument.
-    *   - private:       User is only allowed to use the action on himself/herself. 
-    *                    Example: If user tries to use 'getAlerts' with a 'value' argument, 
+    *   - private:       User is only allowed to use the action on himself/herself.
+    *                    Example: If user tries to use 'getAlerts' with a 'value' argument,
     *                              an error will be thrown.
     *   - api_key:       An API key is required to perform this action.
     *
@@ -102,11 +103,11 @@ class RestAPI {
         'getactions'               => 'public',
         'getaddon'                 => 'administrator',
         'getaddons'                => 'administrator',
-        'getalerts'                => 'private', 
+        'getalerts'                => 'private',
         'getavatar'                => 'public',
         'getconversation'          => 'private',
         'getconversations'         => 'private',
-        'getgroup'                 => 'public', 
+        'getgroup'                 => 'public',
         'getnode'                  => 'public',
         'getnodes'                 => 'public',
         'getpost'                  => 'public',
@@ -119,22 +120,23 @@ class RestAPI {
         'getstats'                 => 'public',
         'getthread'                => 'public',
         'getthreads'               => 'public',
-        'getuser'                  => 'authenticated', 
+        'getuser'                  => 'authenticated',
         'getusers'                 => 'public',
         'getuserupgrade'           => 'api_key',
         'getuserupgrades'          => 'api_key',
-        'login'                    => 'public', 
+        'login'                    => 'public',
+        'drupal-login'              => 'public',
         'register'                 => 'api_key',
         'search'                   => 'public',
         'upgradeuser'              => 'api_key'
     );
-    
+
     // Array of actions that are user specific and require an username, ID or email for the 'value' parameter.
     private $user_actions = array('getalerts', 'getavatar', 'getconversation', 'getconversations', 'createprofilepost', 'getuser');
-    
+
     // List of general errors, this is where the 'throwError' function gets the messages from.
     private $general_errors = array(
-        0  => 'Unknown error', 
+        0  => 'Unknown error',
         1  => 'Argument: "{ERROR}", is empty/missing a value',
         2  => '"{ERROR}", is not a supported action',
         3  => 'Missing argument: "{ERROR}"',
@@ -207,19 +209,19 @@ class RestAPI {
     * The data gets set here depending on what kind of request method is being used.
     */
     public function __construct($api_key = NULL) {
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);  
-        switch ($this->method) {  
-            case 'get':  
-                $this->data = $_GET;  
-                break;  
-            case 'post':  
-                $this->data = $_POST;  
-                break;  
-            case 'put':  
+        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
+        switch ($this->method) {
+            case 'get':
+                $this->data = $_GET;
+                break;
+            case 'post':
+                $this->data = $_POST;
+                break;
+            case 'put':
             case 'delete':
-                parse_str(file_get_contents('php://input'), $put_vars);  
-                $this->data = $put_vars;  
-                break;  
+                parse_str(file_get_contents('php://input'), $put_vars);
+                $this->data = $put_vars;
+                break;
             default:
                 $this->throwError(12, $this->method);
         }
@@ -297,14 +299,14 @@ class RestAPI {
     public function getAPIKey() {
         return $this->apikey;
     }
-    
+
     /**
     * Sets the API key.
     */
     public function setAPIKey($apikey) {
         $this->apikey = $apikey;
     }
-    
+
     /**
     * Return the hash, returns FALSE if the hash was not set.
     */
@@ -335,7 +337,7 @@ class RestAPI {
     private function stripUserData($user) {
         /*
         * Run through an additional permission check if the request is
-        * not using an API key, unset some variables depending on the 
+        * not using an API key, unset some variables depending on the
         * user level.
         */
         $data = $user->getData();
@@ -370,7 +372,7 @@ class RestAPI {
                 if (isset($data['custom_fields'])) {
                     unset($data['custom_fields']);
                 }
-            } 
+            }
             if ($this->getUser()->getID() != $user->getID()) {
                 // Unset variables if user does not equal the requested user by the 'value' argument.
                 if (isset($data['language_id'])) {
@@ -392,7 +394,7 @@ class RestAPI {
         }
         return $data;
     }
-    
+
     /**
     * Checks if the request is authenticated.
     * Returns TRUE if the hash equals the API key.
@@ -425,7 +427,7 @@ class RestAPI {
         }
         return FALSE;
     }
-    
+
     /**
     * Checks if the request is permitted.
     * Returns TRUE if API key is set and valid or the action's permission is public.
@@ -495,7 +497,7 @@ class RestAPI {
         // Return the array(s).
         return $custom_array_data;
     }
-    
+
     /**
     * Returns TRUE if the request has an API key that is valid, returns FALSE if not.
     */
@@ -505,7 +507,7 @@ class RestAPI {
         }
         return FALSE;
     }
-    
+
     /**
     * Returns the User class of the username if the hash is set and is an userhash.
     * Returns FALSE if the hash is not an userhash.
@@ -519,7 +521,7 @@ class RestAPI {
             $array = explode(':', $this->getHash());
             $this->user = $this->xenAPI->getUser($array[0]);
             return $this->user;
-        }    
+        }
         return NULL;
     }
 
@@ -531,7 +533,7 @@ class RestAPI {
             if (!$this->getRequest('order_by')) {
                 // Throw error if the 'order_by' argument is set but empty.
                 $this->throwError(1, 'order_by');
-            } 
+            }
             if (!in_array(strtolower($this->getRequest('order_by')), $order_by_array)) {
                 // Throw error if the 'order_by' argument is set but could not be found in list of allowed order_by.
                 $this->throwError(22, $this->getRequest('order_by'), implode(', ', $order_by_array));
@@ -540,37 +542,37 @@ class RestAPI {
         }
         return FALSE;
     }
-    
+
     /**
     * Returns the method (get, post, put, delete).
     */
     public function getMethod() {
         return $this->method;
     }
-    
+
     /**
     * Returns the action name.
     */
     public function getAction() {
         return $this->getRequest('action');
     }
-    
+
     /**
     * Returns the permission name of the action.
     */
     public function getActionPermission() {
-        return (isset($this->data['action']) && isset($this->actions[strtolower($this->getAction())])) 
-                ? strtolower($this->actions[strtolower($this->getAction())]) 
+        return (isset($this->data['action']) && isset($this->actions[strtolower($this->getAction())]))
+                ? strtolower($this->actions[strtolower($this->getAction())])
                 : NULL;
     }
-    
+
     /**
     * Returns TRUE if the '$key' is set a argument, returns FALSE if not.
     */
     public function hasRequest($key) {
         return isset($this->data[strtolower($key)]);
     }
-    
+
     /**
     * Gets the data of the '$key', returns FALSE if the '$key' argument was not set.
     */
@@ -581,28 +583,28 @@ class RestAPI {
             return FALSE;
         }
     }
-    
+
     /**
     * Returns the array of all the arguments in the request.
     */
     public function getData() {
         return $this->data;
     }
-    
+
     /**
     * Returns TRUE if the action is supported, FALSE if not.
     */
     public function isSupportedAction() {
         return isset($this->data['action']) && array_key_exists(strtolower($this->data['action']), $this->actions);
     }
-    
+
     /**
     * Returns TRUE if the action is a public action (does not require a hash), FALSE if not.
     */
     public function isPublicAction() {
         return isset($this->data['action']) && isset($this->actions[strtolower($this->data['action'])]) && strtolower($this->actions[strtolower($this->data['action'])]) == 'public';
     }
-    
+
     /**
     * Returns TRUE if the action is a user action (the 'value' parameter has to be an username/id/email), FALSE if not.
     */
@@ -704,13 +706,13 @@ class RestAPI {
         }
         if ($extra !== NULL) {
             $error_string = str_replace('{ERROR}', $extra, $error_string);
-        } 
+        }
         if ($extra2 !== NULL) {
             $error_string = str_replace('{ERROR2}', $extra2, $error_string);
         }
         return array('id' => $error, 'message' => $error_string);
     }
-    
+
     /**
     * Throw the error message.
     */
@@ -729,8 +731,8 @@ class RestAPI {
             $user_error = $this->getError($extra['error_id'], NULL, NULL, self::USER_ERROR);
             $general_error = $this->getError(7, $extra2, $user_error['message']);
             $error_response = array(
-                'error' => $general_error['id'], 
-                'message' => $general_error['message'], 
+                'error' => $general_error['id'],
+                'message' => $general_error['message'],
                 $error_key . '_error_id' => $user_error['id'],
                 $error_key . '_error_field' => $extra['error_field'],
                 $error_key . '_error_key' => $extra['error_key'],
@@ -763,8 +765,8 @@ class RestAPI {
                     if (!($error instanceof XenForo_Phrase)) {
                         $post_error = array(
                             'error_id' => 1,
-                            'error_key' => 'field_not_recognised', 
-                            'error_field' => $error_field, 
+                            'error_key' => 'field_not_recognised',
+                            'error_field' => $error_field,
                             'error_phrase' => $error
                         );
                         $this->throwError(self::USER_ERROR, $post_error, $error_message);
@@ -773,8 +775,8 @@ class RestAPI {
                     // Let's init the error array.
                     $post_error = array(
                         'error_id' => $this->getUserErrorID($error->getPhraseName()),
-                        'error_key' => $error->getPhraseName(), 
-                        'error_field' => $error_field, 
+                        'error_key' => $error->getPhraseName(),
+                        'error_field' => $error_field,
                         'error_phrase' => $error->render()
                     );
 
@@ -783,7 +785,7 @@ class RestAPI {
             } else {
                 $post_error = array(
                     'error_id' => $user_results['error'],
-                    'error_key' => 'general_user_' . $error_key, 
+                    'error_key' => 'general_user_' . $error_key,
                     'error_phrase' => $user_results['errors']
                 );
                 $this->throwError(self::USER_ERROR, $post_error, $error_message);
@@ -794,7 +796,7 @@ class RestAPI {
             $this->sendResponse($user_results);
         }
     }
-    
+
     /**
     * Processes the REST request.
     */
@@ -836,9 +838,9 @@ class RestAPI {
                 $user->data['upgrades'] = $user_upgrades;
             }
         }
-    
+
         switch (strtolower($this->getAction())) {
-            case 'authenticate': 
+            case 'authenticate':
                 /**
                 * Authenticates the user and returns the hash that the user has to use for future requests.
                 *
@@ -876,7 +878,7 @@ class RestAPI {
                         $this->throwError(5, 'Invalid username or password!');
                     }
                 }
-            case 'createalert': 
+            case 'createalert':
                 if (!$this->hasRequest('user')) {
                     // The 'user' argument has not been set, throw error.
                     $this->throwError(3, 'user');
@@ -933,7 +935,7 @@ class RestAPI {
                 // Alert was successful, return results.
                 $this->sendResponse($alert_results);
 
-            case 'createconversation': 
+            case 'createconversation':
                 /**
                 * TODO
                 *
@@ -946,7 +948,7 @@ class RestAPI {
                 } else if ($this->hasAPIKey() && !$this->getRequest('grab_as')) {
                     // Throw error if the 'grab_as' argument is set but empty.
                     $this->throwError(1, 'grab_as');
-                } 
+                }
 
                 $conversation_data = array();
 
@@ -992,7 +994,7 @@ class RestAPI {
                 $conversation_results = $this->xenAPI->createConversation($this->getUser(), $conversation_data);
 
                 $this->handleUserError($conversation_results, 'conversation_creation_error', 'creating a new conversation');
-        case 'createconversationreply': 
+        case 'createconversationreply':
                 /**
                 * TODO
                 *
@@ -1005,7 +1007,7 @@ class RestAPI {
                 } else if ($this->hasAPIKey() && !$this->getRequest('grab_as')) {
                     // Throw error if the 'grab_as' argument is set but empty.
                     $this->throwError(1, 'grab_as');
-                } 
+                }
 
                 $conversation_reply_data = array();
 
@@ -1031,7 +1033,7 @@ class RestAPI {
                 $conversation_reply_results = $this->xenAPI->createConversationReply($this->getUser(), $conversation_reply_data);
 
                 $this->handleUserError($conversation_reply_results, 'conversation_reply_creation_error', 'creating a new conversation reply');
-            case 'createpost': 
+            case 'createpost':
                 /**
                 * TODO
                 *
@@ -1044,7 +1046,7 @@ class RestAPI {
                 } else if ($this->hasAPIKey() && !$this->getRequest('grab_as')) {
                     // Throw error if the 'grab_as' argument is set but empty.
                     $this->throwError(1, 'grab_as');
-                } 
+                }
 
                 if (!$this->hasRequest('thread_id')) {
                     // The 'thread_id' argument has not been set, throw error.
@@ -1078,7 +1080,7 @@ class RestAPI {
                 $post_results = $this->xenAPI->createPost($this->getUser(), $post_data);
 
                 $this->handleUserError($post_results, 'post_creation_error', 'creating a new post');
-        case 'createprofilepost': 
+        case 'createprofilepost':
                 /**
                 * TODO
                 *
@@ -1116,7 +1118,7 @@ class RestAPI {
                 $profile_post_results = $this->xenAPI->createProfilePost($user, $profile_post_data);
 
                 $this->handleUserError($profile_post_results, 'profile_post_creation_error', 'creating a new profile post');
-            case 'createprofilepostcomment': 
+            case 'createprofilepostcomment':
                 /**
                 * TODO
                 *
@@ -1129,7 +1131,7 @@ class RestAPI {
                 } else if ($this->hasAPIKey() && !$this->getRequest('grab_as')) {
                     // Throw error if the 'grab_as' argument is set but empty.
                     $this->throwError(1, 'grab_as');
-                } 
+                }
 
                 // Array of required parameters.
                 $required_parameters = array('profile_post_id', 'message');
@@ -1156,7 +1158,7 @@ class RestAPI {
                 $profile_post_comment_results = $this->xenAPI->createProfilePostComment($this->getUser(), $profile_post_comment_data);
 
                 $this->handleUserError($profile_post_comment_results, 'profile_post_comment_creation_error', 'creating a new profile post comment');
-            case 'createthread': 
+            case 'createthread':
                 /**
                 * TODO
                 *
@@ -1169,7 +1171,7 @@ class RestAPI {
                 } else if ($this->hasAPIKey() && !$this->getRequest('grab_as')) {
                     // Throw error if the 'grab_as' argument is set but empty.
                     $this->throwError(1, 'grab_as');
-                } 
+                }
 
                 if (!$this->hasRequest('node_id')) {
                     // The 'node_id' argument has not been set, throw error.
@@ -1233,7 +1235,7 @@ class RestAPI {
                 $thread_results = $this->xenAPI->createThread($this->getUser(), $thread_data);
 
                 $this->handleUserError($thread_results, 'thread_creation_error', 'creating a new thread');
-            case 'deletepost': 
+            case 'deletepost':
                 /**
                 * TODO
                 *
@@ -1268,7 +1270,7 @@ class RestAPI {
                 $delete_results = $this->xenAPI->deletePost($this->getRequest('post_id'), $reason, $this->hasRequest('hard_delete'), $this->getUser());
 
                 $this->handleUserError($delete_results, 'post_deletion_error', 'deleting post');
-            case 'deleteuser': 
+            case 'deleteuser':
                 /**
                 * TODO
                 *
@@ -1341,7 +1343,7 @@ class RestAPI {
                     if (isset($this->grab_as)) {
                         // Post was found but the 'grab_as' user is not permitted to view the post.
                         $this->throwError(20, $this->getUser()->getUsername() . ' does', 'this post');
-                    } else { 
+                    } else {
                         // Post was found but the user is not permitted to view the post.
                         $this->throwError(20, 'You do', 'this post');
                     }
@@ -1373,7 +1375,7 @@ class RestAPI {
                         $this->throwError(19, 'thread', $edit_data['thread_id']);
                     }
                 }
-               
+
                 // Get edit results.
                 $edit_results = $this->getXenAPI()->editPost($post, $this->getUser(), $edit_data);
 
@@ -1389,8 +1391,8 @@ class RestAPI {
                             if (!($error instanceof XenForo_Phrase)) {
                                 $edit_error = array(
                                     'error_id' => 1,
-                                    'error_key' => 'field_not_recognised', 
-                                    'error_field' => $error_field, 
+                                    'error_key' => 'field_not_recognised',
+                                    'error_field' => $error_field,
                                     'error_phrase' => $error
                                 );
                                 // Throw error message.
@@ -1401,8 +1403,8 @@ class RestAPI {
                             // Let's init the edit error array.
                             $edit_error = array(
                                 'error_id' => $this->getUserErrorID($error->getPhraseName()),
-                                'error_key' => $error->getPhraseName(), 
-                                'error_field' => $error_field, 
+                                'error_key' => $error->getPhraseName(),
+                                'error_field' => $error_field,
                                 'error_phrase' => $error->render()
                             );
 
@@ -1412,7 +1414,7 @@ class RestAPI {
                     } else {
                         $edit_error = array(
                             'error_id' => $edit_results['error'],
-                            'error_key' => 'general_post_edit_error', 
+                            'error_key' => 'general_post_edit_error',
                             'error_phrase' => $edit_results['errors']
                         );
                         // Throw error message.
@@ -1444,7 +1446,7 @@ class RestAPI {
                     if (isset($this->grab_as)) {
                         // Thread was found but the 'grab_as' user is not permitted to view the thread.
                         $this->throwError(20, $this->getUser()->getUsername() . ' does', 'this thread');
-                    } else { 
+                    } else {
                         // Thread was found but the user is not permitted to view the thread.
                         $this->throwError(20, 'You do', 'this thread');
                     }
@@ -1476,7 +1478,7 @@ class RestAPI {
                         $this->throwError(19, 'node', $edit_data['node_id']);
                     }
                 }
-               
+
                 // Get edit results.
                 $edit_results = $this->getXenAPI()->editThread($thread, $this->getUser(), $edit_data);
 
@@ -1492,8 +1494,8 @@ class RestAPI {
                             if (!($error instanceof XenForo_Phrase)) {
                                 $edit_error = array(
                                     'error_id' => 1,
-                                    'error_key' => 'field_not_recognised', 
-                                    'error_field' => $error_field, 
+                                    'error_key' => 'field_not_recognised',
+                                    'error_field' => $error_field,
                                     'error_phrase' => $error
                                 );
                                 // Throw error message.
@@ -1504,8 +1506,8 @@ class RestAPI {
                             // Let's init the edit error array.
                             $edit_error = array(
                                 'error_id' => $this->getUserErrorID($error->getPhraseName()),
-                                'error_key' => $error->getPhraseName(), 
-                                'error_field' => $error_field, 
+                                'error_key' => $error->getPhraseName(),
+                                'error_field' => $error_field,
                                 'error_phrase' => $error->render()
                             );
 
@@ -1515,7 +1517,7 @@ class RestAPI {
                     } else {
                         $edit_error = array(
                             'error_id' => $edit_results['error'],
-                            'error_key' => 'general_thread_edit_error', 
+                            'error_key' => 'general_thread_edit_error',
                             'error_phrase' => $edit_results['errors']
                         );
                         // Throw error message.
@@ -1561,8 +1563,8 @@ class RestAPI {
                     if (!$group) {
                         $edit_error = array(
                             'error_id' => 2,
-                            'error_key' => 'group_not_found', 
-                            'error_field' => 'group', 
+                            'error_key' => 'group_not_found',
+                            'error_field' => 'group',
                             'error_phrase' => 'Could not find group with parameter "' . $this->getRequest('group') . '"'
                         );
                         $this->throwError(self::USER_ERROR, $edit_error, 'editing an user');
@@ -1599,8 +1601,8 @@ class RestAPI {
                                 // Group was not found, throw error.
                                 $edit_error = array(
                                     'error_id' => 2,
-                                    'error_key' => 'group_not_found', 
-                                    'error_field' => $group_field, 
+                                    'error_key' => 'group_not_found',
+                                    'error_field' => $group_field,
                                     'error_phrase' => 'Could not find group with parameter "' . $group_value . '" in array "' . $this->getRequest('add_group') . '"'
                                 );
                                 $this->throwError(self::USER_ERROR, $edit_error, 'editing an user');
@@ -1617,8 +1619,8 @@ class RestAPI {
                             // Group was not found, throw error.
                             $edit_error = array(
                                 'error_id' => 2,
-                                'error_key' => 'group_not_found', 
-                                'error_field' => $group_field, 
+                                'error_key' => 'group_not_found',
+                                'error_field' => $group_field,
                                 'error_phrase' => 'Could not find group with parameter "' . $this->getRequest($group_field) . '"'
                             );
                             $this->throwError(self::USER_ERROR, $edit_error, 'editing an user');
@@ -1642,8 +1644,8 @@ class RestAPI {
                         // The custom fields array was empty, throw error.
                         $edit_error = array(
                             'error_id' => 5,
-                            'error_key' => 'invalid_custom_fields', 
-                            'error_field' => 'custom_fields', 
+                            'error_key' => 'invalid_custom_fields',
+                            'error_field' => 'custom_fields',
                             'error_phrase' => 'The custom fields values were invalid, valid values are: '
                                             . 'custom_fields=custom_field1=custom_value1,custom_field2=custom_value2 '
                                             . 'but got: "' . $this->getRequest('custom_fields') . '" instead'
@@ -1670,7 +1672,7 @@ class RestAPI {
                     // There are no fields set, throw error.
                     $this->throwError(8, $edit_fields);
                 }
-               
+
                 // Get edit results.
                 $edit_results = $this->getXenAPI()->editUser($user, $edit_data);
 
@@ -1683,8 +1685,8 @@ class RestAPI {
                             if (!($error instanceof XenForo_Phrase)) {
                                 $edit_error = array(
                                     'error_id' => 1,
-                                    'error_key' => 'field_not_recognised', 
-                                    'error_field' => $error_field, 
+                                    'error_key' => 'field_not_recognised',
+                                    'error_field' => $error_field,
                                     'error_phrase' => $error
                                 );
                                 $this->throwError(self::USER_ERROR, $edit_error, 'editing an user');
@@ -1693,8 +1695,8 @@ class RestAPI {
                             // Let's init the edit error array.
                             $edit_error = array(
                                 'error_id' => $this->getUserErrorID($error->getPhraseName()),
-                                'error_key' => $error->getPhraseName(), 
-                                'error_field' => $error_field, 
+                                'error_key' => $error->getPhraseName(),
+                                'error_field' => $error_field,
                                 'error_phrase' => $error->render()
                             );
 
@@ -1703,7 +1705,7 @@ class RestAPI {
                     } else {
                         $edit_error = array(
                             'error_id' => $edit_results['error'],
-                            'error_key' => 'general_user_edit_error', 
+                            'error_key' => 'general_user_edit_error',
                             'error_phrase' => $edit_results['errors']
                         );
                         $this->throwError(self::USER_ERROR, $edit_error, 'editing an user');
@@ -1721,7 +1723,7 @@ class RestAPI {
                 *   - api.php?action=getActions
                 */
                 /*
-                
+
                 // TODO: Only show actions depending on what permission level the user is.
                 $temp = array();
                 foreach ($this->actions as $action => $permission) {
@@ -1730,7 +1732,7 @@ class RestAPI {
                 */
                 // Send the response.
                 $this->sendResponse($this->actions);
-            case 'getaddon': 
+            case 'getaddon':
                 /**
                 * Returns the addon information depending on the 'value' argument.
                 *
@@ -1760,7 +1762,7 @@ class RestAPI {
                 }
             case 'getaddons':
                 /**
-                * Returns a list of addons, if a type is not specified or not supported, 
+                * Returns a list of addons, if a type is not specified or not supported,
                 * default (all) is used instead.
                 *
                 * Options for the 'type' argument are:
@@ -1770,14 +1772,14 @@ class RestAPI {
                 *
                 * For more information, see /library/XenForo/Model/Alert.php.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getAddons&hash=USERNAME:HASH
                 *   - api.php?action=getAddons&hash=API_KEY
                 *   - api.php?action=getAddons&type=enabled&hash=USERNAME:HASH
                 *   - api.php?action=getAddons&type=enabled&hash=API_KEY
                 */
-                /* 
-                * Check if the request has the 'type' argument set, 
+                /*
+                * Check if the request has the 'type' argument set,
                 * if it doesn't it uses the default (all).
                 */
                 if ($this->hasRequest('type')) {
@@ -1801,11 +1803,11 @@ class RestAPI {
                 $this->sendResponse(array('count' => count($addons), 'addons' => $addons));
             case 'getalerts':
                 /**
-                * Grabs the alerts from the specified user, if type is not specified, 
+                * Grabs the alerts from the specified user, if type is not specified,
                 * default (recent alerts) is used instead.
-                * 
+                *
                 * NOTE: The 'value' argument will only work for the user itself and
-                *       not on others users unless the permission argument for the 
+                *       not on others users unless the permission argument for the
                 *       'getalerts' action is changed (default permission: private).
                 *
                 * Options for the 'type' argument are:
@@ -1815,7 +1817,7 @@ class RestAPI {
                 *
                 * For more information, see /library/XenForo/Model/Alert.php.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getAlerts&hash=USERNAME:HASH
                 *   - api.php?action=getAlerts&type=fetchAll&hash=USERNAME:HASH
                 *   - api.php?action=getAlerts&value=USERNAME&hash=USERNAME:HASH
@@ -1823,8 +1825,8 @@ class RestAPI {
                 *   - api.php?action=getAlerts&value=USERNAME&hash=API_KEY
                 *   - api.php?action=getAlerts&value=USERNAME&type=fetchAll&hash=API_KEY
                 */
-                /* 
-                * Check if the request has the 'type' argument set, 
+                /*
+                * Check if the request has the 'type' argument set,
                 * if it doesn't it uses the default (fetchRecent).
                 */
                 if ($this->hasRequest('type')) {
@@ -1840,7 +1842,7 @@ class RestAPI {
                 }
                 // Send the response.
                 $this->sendResponse($data);
-            case 'getavatar': 
+            case 'getavatar':
                 /**
                 * Returns the avatar of the requested user.
                 *
@@ -1850,8 +1852,8 @@ class RestAPI {
                 *   - l (Large)
                 *
                 * NOTE: The default avatar size is 'Medium'.
-                * 
-                * EXAMPLES: 
+                *
+                * EXAMPLES:
                 *   - api.php?action=getAvatar&hash=USERNAME:HASH
                 *   - api.php?action=getAvatar&size=M&hash=USERNAME:HASH
                 *   - api.php?action=getAvatar&value=USERNAME&hash=USERNAME:HASH
@@ -1897,7 +1899,7 @@ class RestAPI {
 
                 // Send the response.
                 $this->sendResponse($conversation);
-            case 'getgroup': 
+            case 'getgroup':
                 /**
                 * Returns the group information depending on the 'value' argument.
                 *
@@ -1915,7 +1917,7 @@ class RestAPI {
                     $this->throwError(1, 'value');
                 }
                 $string = $this->getRequest('value');
-                
+
                 // Get the group from XenForo.
                 $group = $this->getXenAPI()->getGroup($string);
 
@@ -1929,12 +1931,12 @@ class RestAPI {
             case 'getconversations':
                 /**
                 * Grabs the conversations from the specified user.
-                * 
+                *
                 * NOTE: The 'value' argument will only work for the user itself and
-                *       not on others users unless the permission argument for the 
+                *       not on others users unless the permission argument for the
                 *       'getconversations' action is changed (default permission: private).
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getConversations&hash=USERNAME:HASH
                 *   - api.php?action=getConversations&value=USERNAME&hash=USERNAME:HASH
                 *   - api.php?action=getConversations&value=USERNAME&hash=API_KEY
@@ -1949,7 +1951,7 @@ class RestAPI {
 
                 // Send the response.
                 $this->sendResponse(array('count' => count($conversations), 'conversations' => $conversations));
-            case 'getgroup': 
+            case 'getgroup':
                 /**
                 * Returns the group information depending on the 'value' argument.
                 *
@@ -1967,7 +1969,7 @@ class RestAPI {
                     $this->throwError(1, 'value');
                 }
                 $string = $this->getRequest('value');
-                
+
                 // Get the group from XenForo.
                 $group = $this->getXenAPI()->getGroup($string);
 
@@ -2009,7 +2011,7 @@ class RestAPI {
                     if (isset($this->grab_as)) {
                         // Thread was found but the 'grab_as' user is not permitted to view the node.
                         $this->throwError(20, $this->getUser()->getUsername() . ' does', 'this node');
-                    } else { 
+                    } else {
                         // Thread was found but the user is not permitted to view the node.
                         $this->throwError(20, 'You do', 'this node');
                     }
@@ -2024,7 +2026,7 @@ class RestAPI {
                 /**
                 * Returns a list of nodes.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getNodes&hash=USERNAME:HASH
                 *   - api.php?action=getNodes&hash=API_KEY
                 */
@@ -2087,7 +2089,7 @@ class RestAPI {
                     if (isset($this->grab_as)) {
                         // Post was found but the 'grab_as' user is not permitted to view the post.
                         $this->throwError(20, $this->getUser()->getUsername() . ' does', 'this post');
-                    } else { 
+                    } else {
                         // Post was found but the user is not permitted to view the post.
                         $this->throwError(20, 'You do', 'this post');
                     }
@@ -2104,7 +2106,7 @@ class RestAPI {
                 *
                 * NOTE: Only usernames and user ID's can be used for the 'author' parameter.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getPosts&hash=USERNAME:HASH
                 *   - api.php?action=getPosts&hash=API_KEY
                 *   - api.php?action=getPosts&author=Contex&hash=USERNAME:HASH
@@ -2211,7 +2213,7 @@ class RestAPI {
                     if (isset($this->grab_as)) {
                         // Thread was found but the 'grab_as' user is not permitted to view the thread.
                         $this->throwError(20, $this->getUser()->getUsername() . ' does', 'this profile post');
-                    } else { 
+                    } else {
                         // Thread was found but the user is not permitted to view the profile post.
                         $this->throwError(20, 'You do', 'this profile post');
                     }
@@ -2228,7 +2230,7 @@ class RestAPI {
                 *
                 * NOTE: Only usernames and user ID's can be used for the 'author' parameter.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getProfilePosts&hash=USERNAME:HASH
                 *   - api.php?action=getProfilePosts&hash=API_KEY
                 *   - api.php?action=getProfilePosts&author=Contex&hash=USERNAME:HASH
@@ -2274,8 +2276,8 @@ class RestAPI {
                 }
 
                 // Check if the order by argument is set.
-                $order_by_field = $this->checkOrderBy(array('profile_post_id', 'profile_user_id', 'user_id', 'username', 'post_date', 
-                                                            'attach_count', 'likes', 'comment_count', 'first_comment_date', 
+                $order_by_field = $this->checkOrderBy(array('profile_post_id', 'profile_user_id', 'user_id', 'username', 'post_date',
+                                                            'attach_count', 'likes', 'comment_count', 'first_comment_date',
                                                             'last_comment_date'));
 
                 // Add the order by options to the fetch options.
@@ -2289,7 +2291,7 @@ class RestAPI {
 
                 // Send the response.
                 $this->sendResponse(array('count' => count($profile_posts), 'profile_posts' => $profile_posts));
-            case 'getresource': 
+            case 'getresource':
                 /**
                 * Returns the resource information depending on the 'value' argument.
                 *
@@ -2300,14 +2302,14 @@ class RestAPI {
                 *   - api.php?action=getResource&value=1&hash=USERNAME:HASH
                 *   - api.php?action=getResource&value=1&hash=API_KEY
                 */
-                /* 
+                /*
                 * Check the resource addon is installed
                 */
                 if (!$this->getXenAPI()->getModels()->hasModel('resource')) {
                     $this->throwError(16, 'resource');
                 }
                 $fetchOptions = array();
-                /* 
+                /*
                 * Check if the request has the 'grab_description' argument set.
                 */
                 if ($this->hasRequest('grab_description')) {
@@ -2333,13 +2335,13 @@ class RestAPI {
                 }
             case 'getresources':
                 /**
-                * Returns a list of resources, either all the resources, 
+                * Returns a list of resources, either all the resources,
                 * or just the resources created by an author.
                 *
                 * NOTE: Only usernames and user ID's can be used for the 'author' parameter.
                 * NOTE: Only resource category ID's can be used for the 'category_id' parameter.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getResources&hash=USERNAME:HASH
                 *   - api.php?action=getResources&hash=API_KEY
                 *   - api.php?action=getResources&author=Contex&hash=USERNAME:HASH
@@ -2347,7 +2349,7 @@ class RestAPI {
                 *   - api.php?action=getResources&author=Contex&category_id=1&hash=USERNAME:HASH
                 *   - api.php?action=getResources&author=1&category_id=2&hash=API_KEY
                 */
-                /* 
+                /*
                 * Check the resource addon is installed
                 */
                 if (!$this->getXenAPI()->getModels()->hasModel('resource')) {
@@ -2355,14 +2357,14 @@ class RestAPI {
                 }
                 $conditions = array();
                 $fetchOptions = array();
-                /* 
+                /*
                 * Check if the request has the 'grab_description' argument set.
                 */
                 if ($this->hasRequest('grab_description')) {
                     // Grab resources with description
                     $fetchOptions['join'] = XenResource_Model_Resource::FETCH_DESCRIPTION;
                 }
-                /* 
+                /*
                 * Check if the request has the 'category_id' argument set.
                 */
                 if ($this->hasRequest('category_id')) {
@@ -2372,10 +2374,10 @@ class RestAPI {
                     }
                     // Use the value from the 'category_id' argument to set the variables.
                     $conditions['resource_category_id'] = $this->getRequest('category_id');
-                    
+
                 }
-                /* 
-                * Check if the request has the 'author' argument set, 
+                /*
+                * Check if the request has the 'author' argument set,
                 * if it doesn't it uses the default (all).
                 */
                 if ($this->hasRequest('author')) {
@@ -2409,11 +2411,11 @@ class RestAPI {
                 /**
                 * Returns a list of resource categories
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getResourceCategories&hash=USERNAME:HASH
                 *   - api.php?action=getResourceCategories&hash=API_KEY
                 */
-                /* 
+                /*
                 * Check the resource addon is installed
                 */
                 if (!$this->getXenAPI()->getModels()->hasModel('resource')) {
@@ -2503,7 +2505,7 @@ class RestAPI {
                     if (isset($this->grab_as)) {
                         // Thread was found but the 'grab_as' user is not permitted to view the thread.
                         $this->throwError(20, $this->getUser()->getUsername() . ' does', 'this thread');
-                    } else { 
+                    } else {
                         // Thread was found but the user is not permitted to view the thread.
                         $this->throwError(20, 'You do', 'this thread');
                     }
@@ -2520,7 +2522,7 @@ class RestAPI {
                 *
                 * NOTE: Only usernames and user ID's can be used for the 'author' parameter.
                 *
-                * EXAMPLES: 
+                * EXAMPLES:
                 *   - api.php?action=getThreads&hash=USERNAME:HASH
                 *   - api.php?action=getThreads&hash=API_KEY
                 *   - api.php?action=getThreads&author=Contex&hash=USERNAME:HASH
@@ -2607,11 +2609,11 @@ class RestAPI {
 
                 // Send the response.
                 $this->sendResponse(array('count' => count($threads), 'threads' => $threads));
-            case 'getuser': 
+            case 'getuser':
                 /**
                 * Grabs and returns an user object.
-                * 
-                * EXAMPLES: 
+                *
+                * EXAMPLES:
                 *   - api.php?action=getUser&hash=USERNAME:HASH
                 *   - api.php?action=getUser&value=USERNAME&hash=USERNAME:HASH
                 *   - api.php?action=getUser&value=USERNAME&hash=API_KEY
@@ -2619,7 +2621,7 @@ class RestAPI {
 
                 // Send the response.
                 $this->sendResponse($this->stripUserData($user));
-            case 'getusers': 
+            case 'getusers':
                 /**
                 * Searches through the usernames depending on the input.
                 *
@@ -2669,23 +2671,23 @@ class RestAPI {
 
                     // Check if the order by argument is set.
                     $order_by_field = $this->checkOrderBy(array('user_id', 'message_count', 'conversations_unread', 'register_date', 'last_activity', 'trophy_points', 'alerts_unread', 'like_count'));
-                    
+
                     // Perform the SQL query and grab all the usernames and user id's.
                     // Perform the SQL query and grab all the usernames and user id's.
-                    $results = $this->xenAPI->getDatabase()->fetchAll("SELECT `user_id`, `username`" 
-                        . ($this->hasRequest('order_by') ? ", " . $this->xenAPI->getDatabase()->quote($order_by_field) : '') 
-                        . " FROM `xf_user`" . ($this->hasRequest('value') ? " WHERE `username` LIKE " . $this->xenAPI->getDatabase()->quote($string) : '') 
-                        . ($this->hasRequest('order_by') ? " ORDER BY `$order_by_field` " . $this->order : '') 
+                    $results = $this->xenAPI->getDatabase()->fetchAll("SELECT `user_id`, `username`"
+                        . ($this->hasRequest('order_by') ? ", " . $this->xenAPI->getDatabase()->quote($order_by_field) : '')
+                        . " FROM `xf_user`" . ($this->hasRequest('value') ? " WHERE `username` LIKE " . $this->xenAPI->getDatabase()->quote($string) : '')
+                        . ($this->hasRequest('order_by') ? " ORDER BY `$order_by_field` " . $this->order : '')
                         . (($this->limit > 0) ? ' LIMIT ' . $this->xenAPI->getDatabase()->quote($this->limit) : ''));
                 }
 
                 // Send the response.
                 $this->sendResponse($results);
-            case 'getuserupgrade': 
+            case 'getuserupgrade':
                 /**
                 * TODO
-                * 
-                * EXAMPLES: 
+                *
+                * EXAMPLES:
                 */
                 if (!$this->hasRequest('id')) {
                     // The 'id' argument has not been set, throw error.
@@ -2703,11 +2705,11 @@ class RestAPI {
 
                 // Send the response.
                 $this->sendResponse($user_upgrade);
-            case 'getuserupgrades': 
+            case 'getuserupgrades':
                 /**
                 * TODO
-                * 
-                * EXAMPLES: 
+                *
+                * EXAMPLES:
                 */
                 $user = NULL;
 
@@ -2828,7 +2830,7 @@ class RestAPI {
                     }
                     // Set the language id of the registration.
                     $end_date = $this->getRequest('end_date');
-                    if (!(((string) (int) $this->getRequest('end_date') === $this->getRequest('end_date')) 
+                    if (!(((string) (int) $this->getRequest('end_date') === $this->getRequest('end_date'))
                         && ($this->getRequest('end_date') <= PHP_INT_MAX)
                         && ($this->getRequest('end_date') >= ~PHP_INT_MAX))) {
                         $this->throwError(6, $this->getRequest('end_date'), 'unix timestamp');
@@ -2886,8 +2888,8 @@ class RestAPI {
 
                         // Start session and saves the session to the database
                         $session = $this->getXenAPI()->login(
-                            $user->getID(), 
-                            $user->getUsername(), 
+                            $user->getID(),
+                            $user->getUsername(),
                             XenForo_Helper_Ip::convertIpStringToBinary($this->getRequest('ip_address'))
                        );
 
@@ -2909,6 +2911,76 @@ class RestAPI {
                             'cookie_domain'     => $cookie_domain,
                             'cookie_expiration' => 0,
                             'cookie_secure'     => XenForo_Application::$secure
+                        ));
+                    } else {
+                        // The username or password was wrong, throw error.
+                        $this->throwError(5, 'Invalid username or password!');
+                    }
+                }
+            case 'drupal-login':
+                /**
+                 * Logins the user form drupal.
+                 *
+                 * EXAMPLE:
+                 *   - api.php?action=login&username=USERNAME&password=PASSWORD&ip_address=xf.forum.dev
+                 */
+                if (!$this->hasRequest('username')) {
+                    // The 'username' argument has not been set, throw error.
+                    $this->throwError(3, 'username');
+                } else if (!$this->getRequest('username')) {
+                    // Throw error if the 'username' argument is set but empty.
+                    $this->throwError(1, 'username');
+                } else if (!$this->hasRequest('password')) {
+                    // The 'password' argument has not been set, throw error.
+                    $this->throwError(3, 'password');
+                } else if (!$this->getRequest('password')) {
+                    // Throw error if the 'password' argument is set but empty.
+                    $this->throwError(1, 'password');
+                } else if (!$this->hasRequest('ip_address')) {
+                    // The 'ip_address' argument has not been set, throw error.
+                    $this->throwError(3, 'ip_address');
+                } else if (!$this->getRequest('ip_address')) {
+                    // Throw error if the 'ip_address' argument is set but empty.
+                    $this->throwError(1, 'ip_address');
+                }
+
+                // Get the user object.
+                $user = $this->xenAPI->getUser($this->getRequest('username'));
+                if (!$user->isRegistered()) {
+                    // Requested user was not registered, throw error.
+                    $this->throwError(4, 'user', $this->getRequest('username'));
+                } else {
+                    // Requested user was registered, check authentication.
+                    if ($user->validateDrupalAuthentication($user, $this->getRequest('password'))) {
+                        // Authentication was valid, grab the user's authentication record.
+                        $record = $user->getAuthenticationRecord();
+                        $ddata = unserialize($record['data']);
+
+                        // Start session and saves the session to the database
+                        $session = $this->getXenAPI()->login(
+                          $user->getID(),
+                          $user->getUsername(),
+                          XenForo_Helper_Ip::convertIpStringToBinary($this->getRequest('ip_address'))
+                        );
+
+                        $cookie_domain = XenForo_Application::get('config')->cookie->domain;
+
+                        // Check if cookie domain is empty, grab board url and use its domain if it is empty
+                        if (empty($cookie_domain)) {
+                            $url = XenForo_Application::getOptions()->boardUrl;
+                            $parse = parse_url($url);
+                            $cookie_domain = $parse['host'];
+                        }
+
+                        // Return data required for creating cookie
+                        $this->sendResponse(array(
+                          'hash'             => base64_encode($ddata['hash']),
+                          'cookie_name'       => XenForo_Application::get('config')->cookie->prefix . 'session',
+                          'cookie_id'         => $session->getSessionId(),
+                          'cookie_path'       => XenForo_Application::get('config')->cookie->path,
+                          'cookie_domain'     => $cookie_domain,
+                          'cookie_expiration' => 0,
+                          'cookie_secure'     => XenForo_Application::$secure
                         ));
                     } else {
                         // The username or password was wrong, throw error.
@@ -2956,8 +3028,8 @@ class RestAPI {
                     if (!$group) {
                         $registration_error = array(
                             'error_id' => 2,
-                            'error_key' => 'group_not_found', 
-                            'error_field' => 'group', 
+                            'error_key' => 'group_not_found',
+                            'error_field' => 'group',
                             'error_phrase' => 'Could not find group with parameter "' . $this->getRequest('group') . '"'
                         );
                         $this->throwError(self::USER_ERROR, $registration_error, 'registering a new user');
@@ -2979,8 +3051,8 @@ class RestAPI {
                         // The custom fields array was empty, throw error.
                         $registration_error = array(
                             'error_id' => 5,
-                            'error_key' => 'invalid_custom_fields', 
-                            'error_field' => 'custom_fields', 
+                            'error_key' => 'invalid_custom_fields',
+                            'error_field' => 'custom_fields',
                             'error_phrase' => 'The custom fields values were invalid, valid values are: '
                                             . 'custom_fields=custom_field1=custom_value1,custom_field2=custom_value2 '
                                             . 'but got: "' . $this->getRequest('custom_fields') . '" instead'
@@ -3015,8 +3087,8 @@ class RestAPI {
                                 // Group was not found, throw error.
                                 $registration_error = array(
                                     'error_id' => 2,
-                                    'error_key' => 'group_not_found', 
-                                    'error_field' => 'add_groups', 
+                                    'error_key' => 'group_not_found',
+                                    'error_field' => 'add_groups',
                                     'error_phrase' => 'Could not find group with parameter "' . $group_value . '" in array "' . $this->getRequest('add_group') . '"'
                                 );
                                 $this->throwError(self::USER_ERROR, $registration_error, 'registering a new user');
@@ -3033,8 +3105,8 @@ class RestAPI {
                             // Group was not found, throw error.
                             $registration_error = array(
                                 'error_id' => 2,
-                                'error_key' => 'group_not_found', 
-                                'error_field' => 'add_groups', 
+                                'error_key' => 'group_not_found',
+                                'error_field' => 'add_groups',
                                 'error_phrase' => 'Could not find group with parameter "' . $this->getRequest('add_groups') . '"'
                             );
                             $this->throwError(self::USER_ERROR, $registration_error, 'registering a new user');
@@ -3075,8 +3147,8 @@ class RestAPI {
                             if (!($error instanceof XenForo_Phrase)) {
                                 $registration_error = array(
                                     'error_id' => 1,
-                                    'error_key' => 'field_not_recognised', 
-                                    'error_field' => $error_field, 
+                                    'error_key' => 'field_not_recognised',
+                                    'error_field' => $error_field,
                                     'error_phrase' => $error
                                 );
                                 $this->throwError(self::USER_ERROR, $registration_error, 'registering a new user');
@@ -3086,17 +3158,17 @@ class RestAPI {
                             // Let's init the registration error array.
                             $registration_error = array(
                                 'error_id' => $this->getUserErrorID($error->getPhraseName()),
-                                'error_key' => $error->getPhraseName(), 
-                                'error_field' => $error_field, 
+                                'error_key' => $error->getPhraseName(),
+                                'error_field' => $error_field,
                                 'error_phrase' => $error->render()
                             );
-                            
+
                             $this->throwError(self::USER_ERROR, $registration_error, 'registering a new user');
                         }
                     } else {
                         $registration_error = array(
                             'error_id' => $registration_results['error'],
-                            'error_key' => 'general_user_registration_error', 
+                            'error_key' => 'general_user_registration_error',
                             'error_phrase' => $registration_results['errors']
                         );
 
@@ -3124,7 +3196,7 @@ class RestAPI {
                     }
                     // Set the language id of the registration.
                     $order = $this->getRequest('order');
-                } 
+                }
                 if ($this->hasRequest('type')) {
                     // Request has type.
                     if (!$this->getRequest('type')) {
@@ -3141,7 +3213,7 @@ class RestAPI {
         }
         $this->throwError(7, 'executing action', $this->getAction());
     }
-    
+
     /**
     * Send the response array in JSON.
     */
@@ -3155,12 +3227,12 @@ class RestAPI {
 }
 
 /**
-* The XenAPI class provides all the functions and variables 
+* The XenAPI class provides all the functions and variables
 * that are needed to use XenForo's classes and functions.
 */
 class XenAPI {
     private $xfDir, $models;
-    
+
     /**
     * Default consturctor, instalizes XenForo classes and models.
     */
@@ -3200,7 +3272,7 @@ class XenAPI {
         }
     }
 
-    public function createAlert($alert_user, $cause_user, $alert_data = array()) { 
+    public function createAlert($alert_user, $cause_user, $alert_data = array()) {
         if ($alert_user == NULL) {
             // An user is required to create a new alert.
             return array('error' => 13, 'errors' => 'User is required to create an alert.');
@@ -3212,19 +3284,19 @@ class XenAPI {
         $this->getModels()->checkModel('alert', XenForo_Model::create('XenForo_Model_Alert'));
 
         $this->getModels()->getModel('alert')->alertUser(
-            $alert_user->getID(), 
-            $cause_user->getID(), 
-            $cause_user->getUsername(), 
-            $alert_data['content_type'], 
-            $alert_data['content_id'], 
+            $alert_user->getID(),
+            $cause_user->getID(),
+            $cause_user->getUsername(),
+            $alert_data['content_type'],
+            $alert_data['content_id'],
             $alert_data['action']
         );
 
-        
+
         return $alert_data;
     }
 
-    public function createConversation($user, $conversation_data = array()) { 
+    public function createConversation($user, $conversation_data = array()) {
        if ($user == NULL) {
             // An user is required to create a new conversation.
             return array('error' => 13, 'errors' => 'User is required to create a conversation.');
@@ -3280,7 +3352,7 @@ class XenAPI {
         return $session;
     }
 
-    public function createConversationReply($user, $conversation_reply_data = array()) { 
+    public function createConversationReply($user, $conversation_reply_data = array()) {
        if ($user == NULL) {
             // An user is required to create a new conversation.
             return array('error' => 13, 'errors' => 'User is required to create a conversation reply.');
@@ -3326,7 +3398,7 @@ class XenAPI {
         $results = array();
         foreach ($xenforo_results as &$result) {
             if ($type !== NULL) {
-                if (strtolower($result[0]) != strtolower($type) 
+                if (strtolower($result[0]) != strtolower($type)
                     && !(strtolower($result[0]) == 'thread' && strtolower($type) == 'thread_title')) {
                     continue;
                 }
@@ -3355,7 +3427,7 @@ class XenAPI {
         return $results;
     }
 
-    public function createPost($user, $post_data = array()) { 
+    public function createPost($user, $post_data = array()) {
        if ($user == NULL) {
             // An user is required to create a new post.
             return array('error' => 13, 'errors' => 'User is required to create a post.');
@@ -3399,7 +3471,7 @@ class XenAPI {
         return $post;
     }
 
-    public function createProfilePost($user, $profile_post_data = array()) { 
+    public function createProfilePost($user, $profile_post_data = array()) {
        if ($user == NULL) {
             // An user is required to create a new post.
             return array('error' => 13, 'errors' => 'User is required to create a profile post.');
@@ -3441,7 +3513,7 @@ class XenAPI {
         return $this->getProfilePost($profile_post_id);
     }
 
-    public function createProfilePostComment($user, $profile_post_data = array()) { 
+    public function createProfilePostComment($user, $profile_post_data = array()) {
        if ($user == NULL) {
             // An user is required to create a new post.
             return array('error' => 13, 'errors' => 'User is required to create a profile post comment.');
@@ -3483,7 +3555,7 @@ class XenAPI {
 
 
     public function createThread($user, $thread_data = array()) {
-        // TODO: Add support for polls. 
+        // TODO: Add support for polls.
        if ($user == NULL) {
             // An user is required to create a new thread.
             return array('error' => 13, 'errors' => 'User is required to create a thread.');
@@ -3570,7 +3642,7 @@ class XenAPI {
         return $thread;
     }
 
-    public function deletePost($post_id, $reason = NULL, $hard_delete = FALSE, $user = NULL) { 
+    public function deletePost($post_id, $reason = NULL, $hard_delete = FALSE, $user = NULL) {
         if ($hard_delete) {
             $delete_type = 'hard';
         } else {
@@ -3590,7 +3662,7 @@ class XenAPI {
             $permissions = XenForo_Permission::unserializePermissions($forum['node_permission_cache']);
         } else {
             $thread = $this->getThread($post['thread_id']);
-            $forum = $this->getForum($thread['node_id']);  
+            $forum = $this->getForum($thread['node_id']);
         }
 
         $this->getModels()->checkModel('post', XenForo_Model::create('XenForo_Model_Post'));
@@ -3624,7 +3696,7 @@ class XenAPI {
             // User is super admin, we do not allow deleting super admins, return error.
             return array('error' => 6, 'errors' => 'Deleting super admins is disabled.');
         }
-        
+
         $writer = XenForo_DataWriter::create('XenForo_DataWriter_User', XenForo_DataWriter::ERROR_EXCEPTION);
         $writer->setExistingData($user->data);
         $writer->preDelete();
@@ -3686,7 +3758,7 @@ class XenAPI {
 
         // Save the user to the database.
         $writer->save();
-         
+
         // Get the user data.
         $post_data = $writer->getMergedData();
 
@@ -3761,7 +3833,7 @@ class XenAPI {
 
         // Save the user to the database.
         $writer->save();
-         
+
         // Get the user data.
         $thread_data = $writer->getMergedData();
 
@@ -3980,7 +4052,7 @@ class XenAPI {
 
         // Save the user to the database.
         $writer->save();
-         
+
         // Get the user data.
         $user_data = $writer->getMergedData();
 
@@ -4021,28 +4093,28 @@ class XenAPI {
 
         return $diff_array;
     }
-    
+
     /**
     * Returns the Database model.
     */
     public function getDatabase() {
         return $this->getModels()->getModel('database');
     }
-    
+
     /**
     * Returns the array of all the models.
     */
     public function getModels() {
         return $this->models;
     }
-    
+
     /**
     * Grabs the User class of the last registered user.
     */
     public function getLatestUser() {
         return new User($this->getModels(), $this->getModels()->getUserModel()->getLatestUser());
     }
-    
+
     /**
     * Returns the total count of registered users on XenForo.
     */
@@ -4093,7 +4165,7 @@ class XenAPI {
 
     public function getGroup($group) {
         // Get the group from the database.
-        return $this->getDatabase()->fetchRow("SELECT * FROM `xf_user_group` WHERE `user_group_id` = " . $this->getDatabase()->quote($group) 
+        return $this->getDatabase()->fetchRow("SELECT * FROM `xf_user_group` WHERE `user_group_id` = " . $this->getDatabase()->quote($group)
             . " OR `title` = " . $this->getDatabase()->quote($group) . " OR `user_title` = " . $this->getDatabase()->quote($group));
     }
 
@@ -4108,7 +4180,7 @@ class XenAPI {
         $resources = array();
         foreach ($resources_list as &$resource) {
             $resource_version = $this->getModels()->getModel('resource_version')->getVersionById(
-                $resource['current_version_id'], 
+                $resource['current_version_id'],
                 array('join' => XenResource_Model_Version::FETCH_FILE)
             );
             $resource['current_version_string'] = $resource_version['version_string'];
@@ -4134,7 +4206,7 @@ class XenAPI {
         $this->getModels()->checkModel('attachment', XenForo_Model::create('XenForo_Model_Attachment'));
         $resource = $this->getModels()->getModel('resource')->getResourceById($resource, $fetchOptions);
         $resource_version = $this->getModels()->getModel('resource_version')->getVersionById(
-            $resource['current_version_id'], 
+            $resource['current_version_id'],
             array('join' => XenResource_Model_Version::FETCH_FILE)
         );
         $resource['current_version_string'] = $resource_version['version_string'];
@@ -4303,9 +4375,9 @@ class XenAPI {
         if ($node_type == NULL || !in_array($node_type, $this->getNodeTypes())) {
             $node_type = 'all';
         }
-        
+
         // Loop through the nodes to check if the user has permissions to view the thread.
-        foreach ($node_list as $key => &$node) {      
+        foreach ($node_list as $key => &$node) {
             if ($node_type != 'all' && strtolower($node['node_type_id']) != $node_type) {
                 // Node type does not equal the requested node type, unset the node and continue the loop.
                 unset($node_list[$key]);
@@ -4785,7 +4857,7 @@ class XenAPI {
         $this->getModels()->checkModel('ip', XenForo_Model::create('XenForo_Model_Ip'));
         return $this->getModels()->getModel('ip')->getUsersByIp($ip);
     }
-    
+
     /**
     * Returns the User class of the $input parameter.
     *
@@ -4794,7 +4866,7 @@ class XenAPI {
     */
     public function getUser($input, $fetchOptions = array()) {
         if (!empty($fetchOptions['custom_field'])) {
-            $results = $this->getDatabase()->fetchRow("SELECT `user_id` FROM `xf_user_field_value` WHERE `field_id` = " 
+            $results = $this->getDatabase()->fetchRow("SELECT `user_id` FROM `xf_user_field_value` WHERE `field_id` = "
                 . $this->getDatabase()->quote($fetchOptions['custom_field']) . " AND `field_value` = " . $this->getDatabase()->quote($input));
             if (!empty($results['user_id'])) {
                 $input = $results['user_id'];
@@ -4994,7 +5066,7 @@ class XenAPI {
 
         // Save the user to the database.
         $writer->save();
-         
+
         // Get the User as a variable:
         $user = $writer->getMergedData();
 
@@ -5009,7 +5081,7 @@ class XenAPI {
             $this->getModels()->checkModel('user_confirmation', XenForo_Model::create('XenForo_Model_UserConfirmation'));
             $this->getModels()->getModel('user_confirmation')->sendEmailConfirmation($user);
         }
-         
+
         return $user;
     }
 }
@@ -5037,89 +5109,89 @@ class Models {
     }
 
     /**
-    * Returns the array of all the models. 
+    * Returns the array of all the models.
     */
     public function getModels() {
         return $this->models;
     }
-    
+
     /**
     * Returns the model defined by the parameter $model.
     */
     public function getModel($model) {
         return $this->models[$model];
     }
-    
+
     /**
     * Sets the model of the parameter $model.
     */
     public function setModel($name, $model) {
         $this->models[$name] = $model;
     }
-    
+
     /**
     * Sets the user model.
     */
     public function setUserModel($userModel) {
         $this->models['userModel'] = $userModel;
     }
-    
+
     /**
     * Returns the user model.
     */
     public function getUserModel() {
         return $this->models['userModel'];
     }
-    
+
     /**
     * Sets the alert model.
     */
     public function setAlertModel($alertModel) {
         $this->models['alertModel'] = $alertModel;
     }
-    
+
     /**
     * Returns the alert model.
     */
     public function getAlertModel() {
         return $this->models['alertModel'];
     }
-    
+
     /**
     * Sets the userfield model.
     */
     public function setUserFieldModel($userFieldModel) {
         $this->models['userFieldModel'] = $userFieldModel;
     }
-    
+
     /**
     * Returns the userfield model.
     */
     public function getUserFieldModel() {
         return $this->models['userFieldModel'];
     }
-    
+
     /**
     * Sets the avatar model.
     */
     public function setAvatarModel($avatarModel) {
         $this->models['avatarModel'] = $avatarModel;
     }
-    
+
     /**
     * Returns the avatar model.
     */
     public function getAvatarModel() {
         return $this->models['avatarModel'];
     }
-    
+
     /**
     * Returns the database model.
     */
     public function getDatabase() {
         return $this->getModel('database');
     }
-} 
+}
 
 class Post {
     public static function stripThreadValues(&$post) {
@@ -5192,7 +5264,7 @@ class Post {
 */
 class Resource {
     private $data;
-    
+
     /**
     * Default constructor.
     */
@@ -5454,14 +5526,14 @@ class Resource {
     public function hadFirstVisible() {
         return $this->data['had_first_visible'] == 1;
     }
-}   
+}
 
 /**
 * This class contains all the functions and all the relevant data of a XenForo addon.
 */
 class Addon {
     private $data;
-    
+
     /**
     * Default constructor.
     */
@@ -5571,7 +5643,7 @@ class Addon {
 class User {
     public $data;
     private $models, $registered = FALSE;
-    
+
     /**
     * Default constructor.
     */
@@ -5582,19 +5654,19 @@ class User {
             $this->registered = TRUE;
         }
     }
-    
+
     /**
     * Returns an array which contains all the data of the user.
     */
     public function getData() {
         return $this->data;
     }
-    
+
     /**
     * Returns all the alerts and relevant information regarding the alerts.
     */
     public function getAlerts($type = 'fetchRecent') {
-        /* 
+        /*
         * Options are:
         *   - fetchPopupItems: Fetch alerts viewed in the last options:alertsPopupExpiryHours hours.
         *   - fetchRecent:     Fetch alerts viewed in the last options:alertExpiryDays days.
@@ -5608,35 +5680,35 @@ class User {
         }
         return $this->models->getAlertModel()->getAlertsForUser($this->getID(), $type);
     }
-    
+
     /**
     * Returns the ID of the user.
     */
     public function getID() {
         return $this->data['user_id'];
     }
-    
+
     /**
     * Returns the username of the user.
     */
     public function getUsername() {
         return $this->data['username'];
     }
-    
+
     /**
     * Returns the email of the user.
     */
     public function getEmail() {
         return $this->data['email'];
     }
-    
+
     /**
     * Returns the avatar URL of the user.
     */
     public function getAvatar($size) {
-        $avatarUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') 
-            . $_SERVER['HTTP_HOST'] 
-            . dirname($_SERVER['REQUEST_URI']) 
+        $avatarUrl = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://')
+            . $_SERVER['HTTP_HOST']
+            . dirname($_SERVER['REQUEST_URI'])
             . (dirname($_SERVER['REQUEST_URI']) != '/' ? '/' : '');
         if ($this->data['gravatar']) {
             return XenForo_Template_Helper_Core::getAvatarUrl($this->data, $size);
@@ -5646,44 +5718,44 @@ class User {
             return $avatarUrl . XenForo_Template_Helper_Core::getAvatarUrl($this->data, $size, 'default');
         }
     }
-    
+
     /**
     * Returns if the user is registered or not.
     */
     public function isRegistered() {
         return $this->registered;
     }
-    
+
     /**
     * Returns TRUE if the user is a global moderator.
     */
     public function isModerator() {
         return $this->data['is_moderator'] == 1;
     }
-    
+
     /**
     * Returns TRUE if the user an administrator.
     */
     public function isAdmin() {
         return $this->data['is_admin'] == 1;
     }
-    
+
     /**
     * Returns TRUE if the user is banned.
     */
     public function isBanned() {
         return $this->data['is_banned'] == 1;
     }
-    
+
     /**
     * Returns the authentication record of the user.
     */
     public function getAuthenticationRecord() {
-        return $this->models->getUserModel()->getUserAuthenticationRecordByUserId($this->data['user_id']); 
+        return $this->models->getUserModel()->getUserAuthenticationRecordByUserId($this->data['user_id']);
     }
-    
+
     /**
-    * Verifies the password of the user. 
+    * Verifies the password of the user.
     */
     public function validateAuthentication($password) {
         if (strlen($password) == 64) {
@@ -5691,15 +5763,33 @@ class User {
             $ddata = unserialize($record['data']);
             return $ddata['hash'] == $password;
         } else {
-            return $this->models->getUserModel()->validateAuthentication($this->data['username'], $password); 
+            return $this->models->getUserModel()->validateAuthentication($this->data['username'], $password);
         }
     }
-    
+
+    public function validateDrupalAuthentication($user, $password) {
+        if ($password === md5(APIKEY . $user->data['username'])) {
+            return true;
+        }
+
+        return FALSE;
+    }
+
+    protected function authenticate($user, $password)
+    {
+
+    }
+    protected function _getPassword($user_name)
+    {
+        $secret = XenForo_Application::get('config')->drupal_secret;
+        return md5("$secret $user_name");
+    }
+
     /**
     * Returns the amount of unread alerts.
     */
     public function getUnreadAlertsCount() {
-        return $this->models->getUserModel()->getUnreadAlertsCount($this->getID()); 
+        return $this->models->getUserModel()->getUnreadAlertsCount($this->getID());
     }
 
     /**
